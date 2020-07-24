@@ -39,18 +39,20 @@ root = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDL.06'
 
 
 start_time = time.time()
-for d in date_range(date(2020, 6, 28), date(2020, 6, 30)):
-    url = f'{root}/{d.year}/{d.month:02}/3B-DAY-L.MS.MRG.3IMERG.{d.year}{d.month:02}{d.month:02}-S000000-E235959.V06.nc4'
+start_date = date(2005, 1, 1)
+end_date = date(2020, 7, 1)
+for d in date_range(start_date, end_date):
+    url = f'{root}/{d.year}/{d.month:02}/3B-DAY-L.MS.MRG.3IMERG.{d.year}{d.month:02}{d.day:02}-S000000-E235959.V06.nc4'
     response = session.get(url, stream=True)
     if response:
-        Path(f'D:/IMERG_DATA/{d.year}/{d.month}').mkdir(parents=True, exist_ok=True)
-        filename = f'D:/IMERG_DATA/{d.year}/{d.month}/{d.day}.nc4'
+        Path(f'D:/IMERG_DATA/{d.year}/{d.month:02}').mkdir(parents=True, exist_ok=True)
+        filename = f'D:/IMERG_DATA/{d.year}/{d.month:02}/{d.day:02}.nc4'
         with open(filename, 'wb') as f:
             for chunk in response.iter_content(chunk_size=None):
                 f.write(chunk)
         elapsed = time.time() - start_time
-        num_completed = (d - date(2000, 6, 1)).days + 1
-        num_remaining = (date(2020, 6, 28) - d).days
+        num_completed = (d - start_date).days + 1
+        num_remaining = (end_date - d).days
         eta = datetime.datetime.now() + timedelta(seconds=num_remaining * elapsed / num_completed)
         print(f'Successfully downloaded data for {d}, ETA={eta}')
     else:
