@@ -1,3 +1,6 @@
+"""Downloads IMERG netcdf4 files"""
+
+
 import requests
 import datetime
 from datetime import timedelta, date
@@ -39,7 +42,7 @@ root = 'https://gpm1.gesdisc.eosdis.nasa.gov/data/GPM_L3/GPM_3IMERGDL.06'
 
 
 start_time = time.time()
-start_date = date(2005, 1, 1)
+start_date = date(2003, 6, 1)
 end_date = date(2020, 7, 1)
 for d in date_range(start_date, end_date):
     url = f'{root}/{d.year}/{d.month:02}/3B-DAY-L.MS.MRG.3IMERG.{d.year}{d.month:02}{d.day:02}-S000000-E235959.V06.nc4'
