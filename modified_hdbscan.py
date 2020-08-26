@@ -1,3 +1,12 @@
+"""Performs a somewhat fast, modified version of HDBSCAN that produces much less outliers.
+
+First, there is high level k-means clustering. Then, cluster centers are found using HDBSCAN for each k-means cluster.
+Then, each point is assigned a cluster based on the nearest cluster center in Euclidean distance. This code should take
+about one day to run for the entire region, but may be shorter if you have a faster processor. This can be improved
+by also taking into account outlier scores. https://hdbscan.readthedocs.io/en/latest/soft_clustering_explanation.html
+has more information.
+"""
+
 from datetime import datetime
 import numpy as np
 from scipy.stats import zscore
@@ -34,12 +43,6 @@ def dist_vector(point, exemplar_dict, data):
 def nearest_clust(point, exemplar_dict, data):
     return np.argmin(dist_vector(point, exemplar_dict, data))
 
-
-# lon = np.linspace(30.05, 39.95, 100)
-# lat = np.linspace(-9.95, -0.05, 100)
-# average_prec = np.transpose(np.loadtxt('data/average_prec.txt'))[800:900, 2100:2200]
-# extreme_prec = np.loadtxt('data/extreme_prec_95.txt')[800:900, 2100:2200]
-# topography = np.transpose(np.loadtxt('data/Topography.txt'))[800:900, 2100:2200]
 
 lon = np.linspace(-179.95, 179.95, 3600)
 lat = np.linspace(-59.95, 59.95, 1200)
@@ -86,13 +89,6 @@ np.savetxt('data/modified_hdbscan_clusters.txt', labels)
 
 print(f'Clustering took {datetime.now() - start_time}')
 print(f'Created {len(np.unique(labels))} clusters, average cluster size is {clust_data.shape[0] / len(np.unique(labels))}')
-
-# swap = np.arange(len(np.unique(labels[labels != -1])))
-# np.random.shuffle(swap)
-# new_labels = np.zeros(shape=(1200, 3600))
-# for i, label in enumerate(np.unique(labels[labels != -1])):
-#     new_labels[labels == label] = swap[i]
-# new_labels[labels == -1] = -1
 
 fig, axes = plt.subplots(ncols=2, constrained_layout=True)
 axes[0].imshow(labels_high.reshape(1200, 3600), origin='lower')
