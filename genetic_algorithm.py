@@ -1,3 +1,16 @@
+"""Tunes recursive k-means clustering parameters using a genetic algorithm.
+
+k-means clustering schemes are represented with a genome. Inside the genome there are genes that represent things
+like the weight of a certain clustering variable, average cluster size, or whether a certain variable is used at all.
+For each genome, a recursive k-means clustering is performed with parameters based on the genes in the genome. The
+"fitness" of the genome represents how low the average NCR from 100 randomly sampled clusters is. This python script
+calls a separate R script to calculate the NCR values. Higher fitness is better. Then, the genomes are "crossed" and
+"mutated" to create a new population of genomes, where genomes with better fitness are more likely to pass on their
+genes. Eventually, after a few generations, an optimal clustering scheme should be created. The idea is to use these
+parameters and perform a slower HDBSCAN clustering to see if that will further improve average NCR.
+"""
+
+
 import math
 import random
 import subprocess
