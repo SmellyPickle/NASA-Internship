@@ -1,3 +1,14 @@
+"""Converts gridded daily data into timeseries for individual grid points
+
+The conversion is grouped so that only a small range of latitudes is processed each time. This increases the number
+of times that the gridded daily data must be read but decreases the number of times that each file must be opened. On
+windows, writing (or more specifically, closing a file after appending data to it) is very slow, so grouping is
+worthwhile. The difference might not be as significant on Linux. The runtime of this program should be about one or two
+days, using a typical hard drive on a PC. This value can be longer or shorter depending on your hard drive write speed,
+whether you are including the upper and lower 30 degrees of latitude, and your other system specs.
+"""
+
+
 import os
 import math
 
@@ -12,13 +23,13 @@ nc4_filenames = []
 for dirpath, dirs, files in os.walk('D:\\IMERG_DATA'):
     nc4_filenames.extend([f'{dirpath}\\{f}' for f in files if f.endswith('.nc4')])
 
-groups = [(0, 300), (900, 1200), (1200, 1500), (1500, 1800)]  # latitude values
-iter_size = 2000
+groups = [(300, 600), (600, 900), (900, 1200), (1200, 1500)]
+iter_size = 2000  # increase this value until you run out of RAM in order to maximize speed.
 for group in groups:
     for iteration in range(math.ceil(len(nc4_filenames) / iter_size)):
         read_start = datetime.now()
         sz = iter_size if (iteration + 1) * iter_size <= len(nc4_filenames) else len(nc4_filenames) % iter_size
-        data = np.zeros(shape=(sz, 3600, 300), dtype=np.float32)
+        data = np.zeros(shape=(sz, 3600, group[1] - group[0]), dtype=np.float32)
         for i, filename in enumerate(nc4_filenames[iteration * iter_size:(iteration + 1) * iter_size]):
             with netCDF4.Dataset(filename, 'r') as f:
                 precip_cal = np.array(f.variables['precipitationCal'])[0, :, group[0]:group[1]]
