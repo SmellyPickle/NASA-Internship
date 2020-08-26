@@ -1,3 +1,11 @@
+"""Performs a very similar clustering to the original recursive k-means scheme by Dr. Demirdjian
+
+There are some notable differences. Firstly, the number of clusters is 60, 60, 60 at high, medium, and low levels.
+(This can be changed easily. These values are set to what they are so as to have approximately the same number of 
+points per cluster). Secondly, it uses mini-batch k-means, which is much faster at the cost of a very slight 
+difference in the final results. Finally, it uses 95th percentile data instead of 90th.
+"""
+
 import numpy as np
 from scipy.stats import zscore
 from sklearn.cluster import MiniBatchKMeans
