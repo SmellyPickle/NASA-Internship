@@ -1,3 +1,5 @@
+"""Plots clustering variables on a map"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
