@@ -1,6 +1,5 @@
 library(extRemes)
 library(fields)
-library(zoo)
 
 my_plot <- function(data, numColors=100, lon=longitude, lat=latitude, 
                     lower=min(data, na.rm=TRUE), upper=max(data, na.rm=TRUE), base.white=FALSE, ...) {
@@ -15,6 +14,16 @@ my_plot <- function(data, numColors=100, lon=longitude, lat=latitude,
              breaks = seq(lower, upper, length.out = numColors + 1), 
              col = colfunc(numColors), xlab = "Longitude", ylab = "Latitude",  ...)
   map("world", xlim=range(longitude), ylim=range(latitude), add = TRUE)
+}
+
+rolling_sum = function(data, window) {
+  total <- length(data)
+  spots <- seq(from=1, to=(total-window+1), by=1)
+  result <- vector(length = length(spots))
+  for(i in 1:length(spots)){
+    result[i] <- sum(data[spots[i]:(spots[i]+window-1)])
+  }
+  return(result)
 }
 
 
@@ -60,8 +69,11 @@ avePrec    <- as.matrix(read.table('D:/Average_Prec.txt', sep = ' '))[llcrnrx:ur
 # clustering_alg = 'k-means 606060'
 # cluster_map = t(as.matrix(read.table('D:/kmeans_606060_clusters.txt')))[llcrnrx:urcrnrx, llcrnry_series:urcrnry_series]
 
-clustering_alg = 'k-means precipitation only'
-cluster_map = t(as.matrix(read.table('D:/kmeans_precip_clusters.txt')))[llcrnrx:urcrnrx, llcrnry_series:urcrnry_series]
+# clustering_alg = 'k-means precipitation only'
+# cluster_map = t(as.matrix(read.table('D:/kmeans_precip_clusters.txt')))[llcrnrx:urcrnrx, llcrnry_series:urcrnry_series]
+
+clustering_alg = "custom"
+cluster_map = t(as.matrix(read.table('C:/Users/Jerry Xiong/Desktop/NASA/ga_clusters.txt')))
 
 longitude = seq(llcrnrlon + IMERG_RESOLUTION / 2, urcrnrlon, by=IMERG_RESOLUTION)
 latitude = seq(llcrnrlat + IMERG_RESOLUTION / 2, urcrnrlat, by=IMERG_RESOLUTION)
@@ -69,8 +81,8 @@ latitude = seq(llcrnrlat + IMERG_RESOLUTION / 2, urcrnrlat, by=IMERG_RESOLUTION)
 cluster_indexes = unique(as.vector(cluster_map))
 
 start_time  <- Sys.time()
-print(start_time)
-print(paste0('Total clusters: ', length(cluster_indexes)))
+# print(start_time)
+# print(paste0('Total clusters: ', length(cluster_indexes)))
 
 accum_days = 1
 num_samples = 100
@@ -79,11 +91,11 @@ cum_NCR = 0
 num_points = 0
 
 for (i in 1:num_samples) {
-  label = sample(cluster_indexes, 1)
+  label = sample(cluster_indexes[cluster_indexes != -1], 1)
   
   if (sum(cluster_map == label) == 0) next
   
-  print(paste0('Starting cluster label ', label, ' of size ', nrow(which(cluster_map == label, arr.ind=TRUE)),'\n'))
+  # print(paste0('Starting cluster label ', label, ' of size ', nrow(which(cluster_map == label, arr.ind=TRUE)),'\n'))
   
   clust.ind   <- which(cluster_map == label, arr.ind = TRUE)
   
@@ -97,7 +109,7 @@ for (i in 1:num_samples) {
     
     new.dir <- paste0("Lon", lon.i - 1)
     filename = paste0('D:/IMERG_TIMESERIES_PYTHON_GROUPED2/', new.dir, "/Lat", lat.i - 1, ".txt")
-    total.data[[i]] <- rollapply(as.matrix(read.table(filename, sep = " "))[,1], accum_days, sum)
+    total.data[[i]] <- rolling_sum(as.matrix(read.table(filename, sep = " "))[,1], accum_days)
   }
   
   is_valid    <- !is.na(unlist(total.data))
@@ -131,9 +143,9 @@ for (i in 1:num_samples) {
   rl.ci = ci(fit_MLE, type = "return.level", return.period = years)
   
   NCR = (rl.ci[3] - rl.ci[1]) / rl.ci[2]
-  print(paste0('NCR', years, ' = ', NCR))
+  # print(paste0('NCR', years, ' = ', NCR))
   cum_NCR = cum_NCR + NCR * sum(cluster_map == label)
   num_points = num_points + sum(cluster_map == label)
 }
 
-print(cum_NCR / num_points)
+print(unname(cum_NCR) / num_points)
