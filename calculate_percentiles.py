@@ -1,5 +1,6 @@
-import numpy as np
+"""Calculates percentiles from timeseries data and stores them in text files"""
 
+import numpy as np
 
 percentiles = [25, 50, 75, 95]
 
